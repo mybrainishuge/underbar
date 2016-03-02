@@ -115,8 +115,8 @@
     // like each(), but in addition to running the operation on all
     // the members, it also maintains an array of results.
     var result = [];
-    _.each(collection, function(value) {
-      result.push(iterator(value));
+    _.each(collection, function(value, key, collection) {
+      result.push(iterator(value, key, collection));
     });
     return result;
   };
@@ -160,6 +160,18 @@
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
+    var accumFound = arguments.length < 3;
+
+    _.each(collection, function(value) {
+      if (accumFound) {
+        accumFound = false;
+        accumulator = value;
+      } else {
+        accumulator = iterator(accumulator, value);
+      }
+    });
+
+    return accumulator;
   };
 
   // Determine if the array or object contains a given value (using `===`).
