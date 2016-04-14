@@ -142,19 +142,19 @@
   // Reduces an array or object to a single value by repetitively calling
   // iterator(accumulator, item) for each item. accumulator should be
   // the return value of the previous iterator call.
-  //  
+  //
   // You can pass in a starting value for the accumulator as the third argument
   // to reduce. If no starting value is passed, the first element is used as
   // the accumulator, and is never passed to the iterator. In other words, in
   // the case where a starting value is not passed, the iterator is not invoked
   // until the second element, with the first element as its second argument.
-  //  
+  //
   // Example:
   //   var numbers = [1,2,3];
   //   var sum = _.reduce(numbers, function(total, number){
   //     return total + number;
   //   }, 0); // should be 6
-  //  
+  //
   //   var identity = _.reduce([5], function(total, number){
   //     return total + number * number;
   //   }); // should be 5, regardless of the iterator function passed in
@@ -162,12 +162,12 @@
   _.reduce = function(collection, iterator, accumulator) {
     var accumFound = arguments.length < 3;
 
-    _.each(collection, function(value) {
+    _.each(collection, function(value, index, collection) {
       if (accumFound) {
         accumFound = false;
         accumulator = value;
       } else {
-        accumulator = iterator(accumulator, value);
+        accumulator = iterator(accumulator, value, index, collection);
       }
     });
 
@@ -201,12 +201,9 @@
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
     iterator = iterator || _.identity;
-    if (_.every(collection, function(value) {
+    return !_.every(collection, function(value) {
       return !iterator(value);
-    })) {
-      return false;
-    }
-    return true;
+    });
   };
 
 
@@ -229,9 +226,10 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
-    _.each(arguments, function(arg, key) {
+    var args = [].slice.call(arguments, 1);
+    _.each(args, function(arg, key) {
       _.each(arg, function(value, key) {
-        obj[key] = value; 
+        obj[key] = value;
       });
     });
     return obj;
@@ -240,7 +238,8 @@
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
-    _.each(arguments, function(arg, key) {
+    var args = [].slice.call(arguments, 1);
+    _.each(args, function(arg, key) {
       _.each(arg, function(value, key) {
         obj[key] === undefined && (obj[key] = value);
       });
@@ -325,7 +324,7 @@
 
     var newArray = [];
     var ri;
-    
+
     while(tempArray.length) {
       ri = Math.floor(Math.random() * tempArray.length);
       newArray.push(tempArray[ri]);
@@ -349,9 +348,8 @@
     return _.reduce(collection, function(result, value) {
       if (typeof(functionOrKey) === 'function') {
         return result.push(functionOrKey.apply(value, args)) && result;
-      } else {
-        return result.push(value[functionOrKey](args)) && result;
       }
+      return result.push(value[functionOrKey](args)) && result;
     }, []);
   };
 
@@ -368,6 +366,20 @@
   // Example:
   // _.zip(['a','b','c','d'], [1,2,3]) returns [['a',1], ['b',2], ['c',3], ['d',undefined]]
   _.zip = function() {
+    var zipped = [];
+    var length = 0;
+
+    _.each(arguments, function(array) {
+      array.length > length && (length = array.length);
+    });
+
+    for (var i = 0; i < length; i++) {
+      zipped[i] = [];
+      for (var j = 0; j < arguments.length; j++) {
+        zipped[i].push(arguments[j][i]);
+      }
+    }
+    return zipped;
   };
 
   // Takes a multidimensional array and converts it to a one-dimensional array.
@@ -378,7 +390,7 @@
     result = result || [];
     for (var i = 0; i < nestedArray.length; i++) {
       if (Array.isArray(nestedArray[i])) {
-        result.concat(_.flatten(nestedArray[i], result));
+        _.flatten(nestedArray[i], result);
       } else {
         result.push(nestedArray[i]);
       }
@@ -389,11 +401,42 @@
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
   _.intersection = function() {
+    var shared = [];
+    var tallied = _.reduce(arguments, function(tally, array) {
+      _.each(array, function(value) {
+        value = JSON.stringify(value);
+        tally[value] ? tally[value]++ : (tally[value] = 1);
+      });
+      return tally;
+    }, {});
+
+    _.each(tallied, function(value, key) {
+      if (value > 1) shared.push(JSON.parse(key));
+    });
+    return shared;
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
+    var args = [].slice.call(arguments,1);
+
+    var obj = _.reduce(array, function(obj, value) {
+      obj[JSON.stringify(value)] = value;
+      return obj;
+    }, {});
+
+    var slimObj = _.reduce(args, function(diff, arg) {
+      _.each(arg, function(value) {
+        value = JSON.stringify(value);
+        if (obj.hasOwnProperty(value)) delete obj[value];
+      });
+      return diff;
+    }, obj);
+
+    return _.reduce(slimObj, function(result, value) {
+      return result.push(value) && result;
+    }, []);
   };
 
   // Returns a function, that, when invoked, will only be triggered at most once
