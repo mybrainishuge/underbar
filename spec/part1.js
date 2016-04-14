@@ -102,7 +102,7 @@
          * that don't mutate their inputs!
          */
 
-        expect(input).to.eql([1,2,3,4,5])
+        expect(input).to.eql([1,2,3,4,5]);
       });
 
       it(' should iterate over arrays and provide access to each value', function() {
@@ -218,7 +218,7 @@
 
     describe('indexOf', function() {
       checkForNativeMethods(function() {
-        _.indexOf([10, 20, 30, 40], 40)
+        _.indexOf([10, 20, 30, 40], 40);
       });
 
       it('should find 40 in the list', function() {
@@ -249,7 +249,7 @@
     describe('filter', function() {
       checkForNativeMethods(function() {
         var isEven = function(num) { return num % 2 === 0; };
-        _.filter([1, 2, 3, 4], isEven)
+        _.filter([1, 2, 3, 4], isEven);
       });
 
       it('should return all even numbers in an array', function() {
@@ -306,7 +306,7 @@
 
     describe('uniq', function() {
       checkForNativeMethods(function() {
-        _.uniq([1, 2, 3, 4])
+        _.uniq([1, 2, 3, 4]);
       });
 
       it('should not mutate the input array', function() {
@@ -336,7 +336,7 @@
          * that don't mutate their inputs!
          */
 
-        expect(input).to.eql([1,2,3,4,5])
+        expect(input).to.eql([1,2,3,4,5]);
       });
 
       it('should return all unique values contained in an unsorted array', function() {
@@ -347,9 +347,13 @@
 
       it('should handle iterators that work with a sorted array', function() {
         var iterator = function(value) { return value + 1; };
+        var iterator0 = function(value) { return value * 0; };
+        var iterator3 = function(value) { return value % 3 === 1; };
         var numbers = [1, 2, 2, 3, 4, 4];
 
-        expect(_.uniq(numbers, true, iterator)).to.eql([1, 2, 3, 4]);
+        expect(_.uniq(numbers, true, iterator)).to.eql([1, 2, 3, 4]); // Allows for false positive
+        expect(_.uniq(numbers, true, iterator0)).to.eql([1]);
+        expect(_.uniq(numbers, true, iterator3)).to.eql([1, 2, 4]);
       });
 
       it('should produce a brand new array instead of modifying the input array', function() {
@@ -364,7 +368,7 @@
       checkForNativeMethods(function() {
         _.map([1, 2, 3, 4], function(num) {
           return num * 2;
-        })
+        });
       });
 
       it('should not mutate the input array', function() {
@@ -464,7 +468,7 @@
       it('should not mutate the input array', function() {
         var input = [1,2,3,4,5];
         var result = _.reduce(input, function(memo, item) {return item;});
-        
+
         /*
          * Mutation of inputs should be avoided without good justification otherwise
          * as it can often lead to hard to find bugs and confusing code!
@@ -530,11 +534,17 @@
       });
 
       it('should pass every item of the array into the iterator if a memo is passed in', function() {
-        var result = _.reduce([1,2,3], function(memo, item) {
+        var result10 = _.reduce([1,2,3], function(memo, item) {
           return memo - item;
         }, 10);
 
-        expect(result).to.equal(4);
+        // collection[0] should not be skipped when starting value of memo === collection[0]
+        var result1 = _.reduce([1,2,3], function(memo, item) {
+          return memo + item;
+        }, 1);
+
+        expect(result10).to.equal(4);
+        expect(result1).to.equal(7);
       });
 
       it('should accept falsy values as a valid memo', function() {

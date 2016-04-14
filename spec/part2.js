@@ -111,6 +111,7 @@
         expect(_.every([true, true, true])).to.be.true;
         expect(_.every([true, true, false])).to.be.false;
         expect(_.every([false, false, false])).to.be.false;
+        expect(_.every([false, false, true])).to.be.false;
       });
     });
 
@@ -160,6 +161,7 @@
         expect(_.some([true, true, true])).to.be.true;
         expect(_.some([true, true, false])).to.be.true;
         expect(_.some([false, false, false])).to.be.false;
+        expect(_.some([true])).to.be.true;
       });
     });
 
@@ -440,7 +442,7 @@
         memoSpy(10);
         expect(spy).to.have.been.calledOnce;
       });
-      
+
       it('should not run the memoized function twice when given a reference type as an argument', function() {
         // Be careful how you are checking if a set of arguments has been passed in already
         var spy = sinon.spy(function() { return 'Dummy output'; });
